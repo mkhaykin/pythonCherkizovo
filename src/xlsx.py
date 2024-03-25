@@ -1,4 +1,5 @@
 import logging
+import os
 from db import add_multi, query_data, DataItem, ResultItem
 from datetime import date, datetime
 import pandas as pd
@@ -13,8 +14,17 @@ logger = logging.getLogger(__name__)
 
 
 def open_xlsx(filename: str):
-    opener = "open" if sys.platform == "darwin" else "xdg-open"
-    subprocess.call([opener, filename])
+    # FIXME: smell )))
+    try:
+        opener = "open" if sys.platform == "darwin" else "xdg-open"
+        subprocess.call([opener, filename])
+    except:
+        pass
+
+    try:
+        os.startfile(filename)
+    except:
+        pass
 
 
 def date_from_excel(value):
