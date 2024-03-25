@@ -2,7 +2,11 @@
 
 Тестовое задание: [ТЗ](/docs/ТЗ.docx)
 
-Стек: Python 3.10, pyodbc, Docker, MS SQL 2017, Excel.
+Стек: 
+ - Python 3.10: tkinter, pyodbc;
+ - MS SQL 2017;
+ - Excel | OpenOffice;
+ - Docker.
 
 ## Развертывание
 
@@ -28,7 +32,7 @@
 :setvar user_uid <MSSQL_USERNAME>
 :setvar user_pwd <MSSQL_PASSWORD>
 ```
-Например,
+Например:
 ```
 :setvar db_name TestDB
 :setvar user_uid db_user
@@ -36,7 +40,7 @@
 ```
 
 
-### При установленном Docker.
+### С использованием Docker.
 Запускаем
 ```shell
 docker compose up -d
@@ -45,27 +49,63 @@ docker compose up -d
 - mssql - собственно БД;
 - mssql_conf - контейнер для конфигурирования mssql (создание пользователя, таблицы, sp).
 
-### При отсутствии Docker.
+### Без использования Docker.
 Необходимо создать в БД требуемые объекты вручную.   
 Ссылка на файл скрипта [db-create.sql](db-create.sql)  
 
 ## Запуск приложения:
+### Дополнительное ПО:
+Для работы с MS SQL использует ODBC Driver 18 for SQL Server.  
+
+#### Windows
+Для установки по Windows следует скачать и установить дополнительное ПО: [Скачивание драйвера ODBC Driver for SQL Server](https://learn.microsoft.com/ru-ru/sql/connect/odbc/download-odbc-driver-for-sql-server?view=sql-server-ver16)  
+
+#### Linux
+```shell
+sudo apt install unixodbc-dev
+```
+Для ubuntu дополнительно:
+```shell
+if ! [[ "18.04 20.04 22.04 23.04" == *"$(lsb_release -rs)"* ]];
+then
+    echo "Ubuntu $(lsb_release -rs) is not currently supported.";
+    exit;
+fi
+
+curl https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc
+curl https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
+
+sudo apt-get update
+sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18
+# optional: for bcp and sqlcmd
+sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18
+echo 'export PATH="$PATH:/opt/mssql-tools18/bin"' >> ~/.bashrc
+source ~/.bashrc
+# optional: for unixODBC development headers
+sudo apt-get install -y unixodbc-dev
+```
+
+#### Python
 Требования к версии python не выставлялись, поэтому предполагается, что используется версия 3.10 
 ```sh
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-python3 src/main.py
+python src/main.py
 deactivate
 ```
 
 Файл для загрузки `data.xlsb` находится в `./import`
 
-## Ограничения:
- - MS SQL поднимается в докере, без указаний кодировок и прочая, т.е. с кириллицей может работать не корректно. 
-Но в текущем задании у нас кириллицы нет (кроме строки 160444 с артикулом "#ошибка", в отчете эта строка фигурирует как "#??????")
- - Для создания таблицы / процедуры развертывается отдельный контейнер, он находится в нормально выключенном состоянии.  
+## Ограничения / замечания:
+ - MS SQL поднимается в docker, без указаний кодировок и прочих настроек, т.е. с кириллицей ~~может~~ точно будет работать некорректно. 
+Но в текущем задании у нас кириллицы нет (кроме строки 160444 с артикулом "#ошибка", в отчете эта строка фигурирует как "#??????");
+ - Для создания таблицы / процедуры развертывается отдельный контейнер, он находится в нормально выключенном состоянии;  
  - Загрузка идет пакетами по 100 записей. Полагаю правильнее было бы грузить 
-данные bulk-ом.
- - Данные загружаются непосредственно в таблицу, правильнее было бы конечно закидывать их
-в какую-то временную таблицу, а после переносить в основную.
+данные bulk-ом;
+ - Данные загружаются непосредственно в основную таблицу, правильнее было бы загружать их
+через временную;
+ - Тестировалось на linux, под windows может быть что-то пойдет не так ...
+ - Есть определенные проблемы с фризами в процессе загрузки при открытии about. 
+Есть откровенные неопрятности в коде, но полагаю для тестового проекта это может быть приемлемо;
+ - Для чтения данных используется pandas, что в данном проекте избыточно.
