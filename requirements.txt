@@ -1,0 +1,15 @@
+Babel==2.14.0
+defusedxml==0.7.1
+numpy==1.26.4
+odfpy==1.4.1
+pandas==2.2.1
+pyodbc==5.1.0
+pyperclip==1.8.2
+python-dateutil==2.9.0.post0
+python-dotenv==1.0.1
+pytz==2024.1
+pyxlsb==1.0.10
+six==1.16.0
+tkcalendar==1.6.1
+tzdata==2024.1
+XlsxWriter==3.2.0

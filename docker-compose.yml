@@ -1,0 +1,42 @@
+# docker-compose.yml
+
+version: "3.9"
+
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2017-latest
+    container_name: mssql
+    restart: on-failure
+    env_file:
+      - .env
+    environment:
+      - SA_PASSWORD=${MSSQL_SA_PASSWORD}
+      - ACCEPT_EULA=Y
+      - MSSQL_PID=Express
+    healthcheck:
+      test: [ "CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P ${MSSQL_SA_PASSWORD} -Q 'SELECT 1' || exit 1" ]
+      interval: 10s
+      retries: 10
+      start_period: 10s
+      timeout: 3s
+    ports:
+     - "${MSSQL_PORT}:1433"
+
+  db.configurator:
+    image: mcr.microsoft.com/mssql/server:2017-latest
+    container_name: mssql_conf
+    env_file:
+      - .env
+    volumes:
+      - ./db-create.sql:/db-create.sql:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >
+      bash -c '
+      /opt/mssql-tools/bin/sqlcmd -S db -U sa -P ${MSSQL_SA_PASSWORD} -d master -i /db-create.sql;
+      '
+
+networks:
+  default:
+      name: lan
